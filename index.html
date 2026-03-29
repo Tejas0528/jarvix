@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>JARVIX — Neural Command Interface</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="bg-layer"></div>
+<canvas id="hudCanvas" class="hud-canvas"></canvas>
+<div class="grid-overlay"></div>
+<div class="vignette"></div>
+
+<div class="boot-screen" id="bootScreen">
+  <div class="boot-inner">
+    <div class="boot-hex-ring">
+      <svg viewBox="0 0 200 200" class="boot-svg">
+        <polygon class="boot-hex" points="100,10 177,55 177,145 100,190 23,145 23,55"/>
+        <polygon class="boot-hex-inner" points="100,30 157,63 157,137 100,170 43,137 43,63"/>
+        <circle class="boot-core" cx="100" cy="100" r="25"/>
+        <circle class="boot-orb" cx="100" cy="100" r="8"/>
+      </svg>
+    </div>
+    <div class="boot-text">
+      <div class="boot-line boot-l1">JARVIX NEURAL INTERFACE</div>
+      <div class="boot-line boot-l2">INITIALIZING SYSTEMS...</div>
+      <div class="boot-bar"><div class="boot-fill" id="bootFill"></div></div>
+      <div class="boot-line boot-l3" id="bootStatus">LOADING CORE MODULES</div>
+    </div>
+  </div>
+</div>
+
+<div class="hud-wrapper" id="hudWrapper">
+  <div class="hud-top">
+    <div class="hud-corner hud-corner-tl">
+      <div class="corner-bracket"></div>
+      <div class="sys-identity">
+        <span class="sys-name">JARVIX</span>
+        <span class="sys-ver">v3.1 NEURAL</span>
+      </div>
+    </div>
+    <div class="hud-top-center">
+      <div class="arc-ring-wrap">
+        <svg class="arc-ring" viewBox="0 0 160 60">
+          <defs>
+            <linearGradient id="arcGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#ff2244"/>
+              <stop offset="100%" stop-color="#00aaff"/>
+            </linearGradient>
+          </defs>
+          <path class="arc-track" d="M 10 55 A 75 75 0 0 1 150 55"/>
+          <path class="arc-fill" d="M 10 55 A 75 75 0 0 1 150 55" id="arcFill"/>
+          <circle class="arc-dot" cx="10" cy="55" r="4"/>
+          <circle class="arc-dot" cx="150" cy="55" r="4"/>
+        </svg>
+        <div class="arc-label">
+          <span class="arc-main" id="arcMainText">SYSTEM ONLINE</span>
+          <span class="arc-sub" id="statusText">READY</span>
+        </div>
+      </div>
+    </div>
+    <div class="hud-corner hud-corner-tr">
+      <div class="hud-tr-group">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <a class="profile-btn" href="profile.html" title="Operator Profile">
+            <svg viewBox="0 0 20 20" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6">
+              <circle cx="10" cy="7" r="3.5"/>
+              <path d="M3 18c0-3.5 3-6 7-6s7 2.5 7 6"/>
+            </svg>
+            <span id="profileName">OPERATOR</span>
+          </a>
+          <div class="theme-switcher" title="Switch Theme">
+            <span class="theme-switcher-label">THEME</span>
+            <button class="theme-btn active" data-t="neon" title="Neon" onclick="setTheme('neon')"></button>
+            <button class="theme-btn" data-t="pastel" title="Pastel" onclick="setTheme('pastel')"></button>
+            <button class="theme-btn" data-t="cyberpunk" title="Cyberpunk" onclick="setTheme('cyberpunk')"></button>
+            <button class="theme-btn" data-t="glass" title="Glass Light" onclick="setTheme('glass')"></button>
+          </div>
+        </div>
+        <div class="hud-gauges">
+          <div class="gauge-item">
+            <span class="gauge-val" id="gaugeTime">--:--</span>
+            <span class="gauge-lbl">TIME</span>
+          </div>
+          <div class="gauge-sep"></div>
+          <div class="gauge-item">
+            <span class="gauge-val" id="gaugeTemp">98.6°</span>
+            <span class="gauge-lbl">CORE</span>
+          </div>
+        </div>
+      </div>
+      <div class="corner-bracket"></div>
+    </div>
+  </div>
+
+  <div class="hud-body">
+    <aside class="side-panel left-panel">
+      <div class="panel-header">
+        <span class="panel-title">CONTROLS</span>
+        <div class="panel-line"></div>
+      </div>
+      <div class="ctrl-section">
+        <div class="ctrl-label">AI MODE</div>
+        <div class="persona-stack" id="personalityStack">
+          <button class="ps-btn active" data-persona="friendly"><span class="ps-icon">◈</span> STANDARD</button>
+          <button class="ps-btn" data-persona="professional"><span class="ps-icon">◉</span> TACTICAL</button>
+          <button class="ps-btn" data-persona="funny"><span class="ps-icon">◎</span> CASUAL</button>
+        </div>
+      </div>
+      <div class="ctrl-section">
+        <div class="ctrl-label">LANGUAGE MATRIX</div>
+        <div class="lang-toggle">
+          <span onclick="setLang('en')" id="lang-en" class="active">EN</span>
+          <span onclick="setLang('ta')" id="lang-ta">TA</span>
+          <span onclick="setLang('hi')" id="lang-hi">HI</span>
+        </div>
+      </div>
+      <div class="ctrl-section">
+        <div class="ctrl-label">VOICE SYSTEMS</div>
+        <div class="voice-opts">
+          <label class="vopt-row">
+            <span>AUTO-SPEAK</span>
+            <label class="hud-toggle">
+              <input type="checkbox" id="autoSpeakToggle">
+              <span class="ht-track"><span class="ht-thumb"></span></span>
+            </label>
+          </label>
+          <label class="vopt-row">
+            <span>VOICE</span>
+            <select id="voiceSelect" class="hud-select">
+              <option value="female">FEMALE</option>
+              <option value="male">MALE</option>
+            </select>
+          </label>
+        </div>
+      </div>
+      <div class="ctrl-section">
+        <div class="ctrl-label">NEURAL LOAD</div>
+        <div class="energy-bars">
+          <div class="ebar" style="--h:70%"></div>
+          <div class="ebar" style="--h:55%"></div>
+          <div class="ebar" style="--h:85%"></div>
+          <div class="ebar" style="--h:45%"></div>
+          <div class="ebar" style="--h:90%"></div>
+          <div class="ebar" style="--h:65%"></div>
+          <div class="ebar" style="--h:75%"></div>
+          <div class="ebar" style="--h:50%"></div>
+        </div>
+      </div>
+      <button class="clear-btn" id="clearChatBtn">⊘ PURGE LOG</button>
+    </aside>
+
+    <main class="chat-column">
+      <div class="think-hud" id="thinkingRing">
+        <svg class="think-svg" viewBox="0 0 120 120">
+          <circle class="th-ring th-r1" cx="60" cy="60" r="50"/>
+          <circle class="th-ring th-r2" cx="60" cy="60" r="38"/>
+          <circle class="th-ring th-r3" cx="60" cy="60" r="26"/>
+          <circle class="th-core" cx="60" cy="60" r="10"/>
+        </svg>
+        <div class="think-label">PROCESSING</div>
+      </div>
+      <div id="chatBox" class="chat-box"></div>
+      <div class="chips-row" id="suggestionChips">
+        <button class="chip" onclick="useChip('Run a system diagnostic')">⚡ Diagnostic</button>
+        <button class="chip" onclick="useChip('Tell me something interesting')">◈ Insights</button>
+        <button class="chip" onclick="useChip('Explain quantum computing')">◉ Deep Scan</button>
+        <button class="chip" onclick="useChip('Translate: Hello to Tamil')">🌐 Translate</button>
+      </div>
+      <div class="input-dock">
+        <div class="input-ring">
+          <div class="input-shell" id="inputShell">
+            <textarea id="textInput" placeholder="ENTER COMMAND..." rows="1" spellcheck="false" autocomplete="off"></textarea>
+          </div>
+          <div class="btn-orbit">
+            <button class="orb-btn speak-orb" id="voiceBtn" title="Speak">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+              </svg>
+              <span class="orb-ring"></span>
+            </button>
+            <button class="orb-btn mic-orb" id="micBtn" onclick="startMic()" title="Mic">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                <line x1="12" y1="19" x2="12" y2="23"/>
+                <line x1="8" y1="23" x2="16" y2="23"/>
+              </svg>
+              <span class="orb-ring"></span>
+            </button>
+            <button class="orb-btn send-orb" id="sendBtn" title="Send">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                <line x1="22" y1="2" x2="11" y2="13"/>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+              </svg>
+              <span class="orb-ring"></span>
+            </button>
+          </div>
+        </div>
+        <div class="input-meta">
+          <span class="meta-key"><kbd>ENTER</kbd> TRANSMIT</span>
+          <span class="meta-sep">·</span>
+          <span class="meta-key"><kbd>SHIFT+ENTER</kbd> NEWLINE</span>
+        </div>
+      </div>
+    </main>
+
+    <aside class="side-panel right-panel">
+      <div class="panel-header">
+        <span class="panel-title">TELEMETRY</span>
+        <div class="panel-line"></div>
+      </div>
+      <div class="radar-wrap">
+        <canvas id="radarCanvas" width="160" height="160"></canvas>
+        <div class="radar-label">SCAN ACTIVE</div>
+      </div>
+      <div class="ctrl-section" style="flex:1">
+        <div class="ctrl-label">ACTIVITY LOG</div>
+        <div class="activity-log" id="activityLog">
+          <div class="alog-item">◈ System initialized</div>
+          <div class="alog-item">◉ Neural net loaded</div>
+          <div class="alog-item">◎ Voice engine ready</div>
+        </div>
+      </div>
+      <div class="ctrl-section">
+        <div class="ctrl-label">SYSTEM METRICS</div>
+        <div class="stat-bars">
+          <div class="sbar-row">
+            <span>POWER</span>
+            <div class="sbar"><div class="sbar-fill red-fill" style="width:92%"></div></div>
+            <span>92%</span>
+          </div>
+          <div class="sbar-row">
+            <span>SIGNAL</span>
+            <div class="sbar"><div class="sbar-fill blue-fill" style="width:78%"></div></div>
+            <span>78%</span>
+          </div>
+          <div class="sbar-row">
+            <span>NEURAL</span>
+            <div class="sbar"><div class="sbar-fill red-fill" id="neuralBar" style="width:45%"></div></div>
+            <span id="neuralPct">45%</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <div class="hud-bottom">
+    <div class="hud-corner hud-corner-bl"><div class="corner-bracket"></div></div>
+    <div class="hud-bottom-center">
+      <div class="bottom-ticker" id="ticker">
+        JARVIX NEURAL INTERFACE · ALL SYSTEMS NOMINAL · AWAITING INPUT · READY FOR COMMAND ·&nbsp;
+      </div>
+    </div>
+    <div class="hud-corner hud-corner-br"><div class="corner-bracket"></div></div>
+  </div>
+</div>
+
+<div class="modal-veil" id="clearModal">
+  <div class="modal-hud">
+    <div class="modal-hex">
+      <svg viewBox="0 0 80 80" width="60" height="60">
+        <polygon points="40,5 70,22 70,58 40,75 10,58 10,22" stroke="#ff2244" stroke-width="1.5" fill="rgba(255,34,68,0.1)"/>
+        <text x="40" y="48" text-anchor="middle" fill="#ff2244" font-size="22" font-family="Rajdhani">!</text>
+      </svg>
+    </div>
+    <h3>PURGE MEMORY LOG?</h3>
+    <p>All conversation data will be permanently erased from neural storage.</p>
+    <div class="modal-btns">
+      <button class="mb-cancel" id="cancelClear">ABORT</button>
+      <button class="mb-confirm" id="confirmClear">CONFIRM PURGE</button>
+    </div>
+  </div>
+</div>
+
+<div class="wave-hud" id="waveformOverlay">
+  <div class="wave-arc">
+    <svg viewBox="0 0 200 60" width="200" height="60">
+      <path class="wave-track" d="M10 30 Q30 5 50 30 T90 30 T130 30 T170 30 T190 30"/>
+      <path class="wave-anim" d="M10 30 Q30 5 50 30 T90 30 T130 30 T170 30 T190 30" id="waveAnimPath"/>
+    </svg>
+  </div>
+  <span class="wave-label">TRANSMITTING AUDIO</span>
+  <button class="wave-stop" onclick="stopSpeaking()">■ STOP</button>
+</div>
+
+<div class="toast-stack" id="toastStack"></div>
+<script src="script.js"></script>
+</body>
+</html>
