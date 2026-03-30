@@ -3,17 +3,22 @@ from flask_cors import CORS
 import requests
 import os
 from dotenv import load_dotenv
+
 load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
 
-# 🔐 BEST PRACTICE (use env variable)
+# 🔐 API KEY
 API_KEY = os.getenv("API_KEY")
 
-# 👉 fallback (only for testing)
 if not API_KEY:
-    raise ValueError("APIKEY not found in env")
+    raise ValueError("API KEY not found in environment variables")
+
+
+@app.route("/")
+def home():
+    return "✅ API is running!"
 
 
 @app.route("/chat", methods=["POST"])
@@ -25,7 +30,6 @@ def chat():
             return jsonify({"reply": "⚠️ No message received"}), 400
 
         message = data["message"]
-
         print("📩 User:", message)
 
         response = requests.post(
@@ -41,10 +45,9 @@ def chat():
                     {"role": "user", "content": message}
                 ]
             },
-            timeout=10  # 🔥 prevent hanging
+            timeout=10
         )
 
-        # 🔍 DEBUG
         print("📡 Status:", response.status_code)
 
         if response.status_code != 200:
@@ -54,7 +57,6 @@ def chat():
 
         result = response.json()
 
-        # 🔥 SAFE PARSE
         reply = result.get("choices", [{}])[0].get("message", {}).get("content", "")
 
         if not reply:
@@ -72,5 +74,7 @@ def chat():
         return jsonify({"reply": "⚠️ Server error: " + str(e)})
 
 
+# 🔥 IMPORTANT FOR RENDER
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
